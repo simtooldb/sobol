@@ -12,7 +12,7 @@ def sob (dim=4, num=4096, f=None, seed=1234):
     if f: np.savetxt(f, vals, delimiter=',', fmt='%.10f')
     return vals
 
-if __name__ == '__main__':
+def getArgs ():
     import argparse
     msg = "Generate at least cnt lines of sobol samples of size dim and place in file sobol.out"
     parser = argparse.ArgumentParser(description=msg, )    
@@ -21,6 +21,11 @@ if __name__ == '__main__':
     parser.add_argument("-o", default='./sobol.csv', help='output filename (default "./sobol.csv")')
     parser.add_argument("-s", default=1234, type=int, help='seed')
     parser.add_argument("-v", action='store_true', default=False, help='output to terminal')
-    ag = parser.parse_args()
+    parser.add_argument("-b", action='store_true', default=False, help='output to terminal')
+    return parser.parse_args()
+    
+if __name__ == '__main__':
+    ag = getArgs()
+    # parseBatchParams(batchfile)
     vals = sob(dim=ag.dim, num=ag.cnt, seed=ag.s, f=ag.o if ag.o else None)
     if ag.v: print(vals)
