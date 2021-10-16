@@ -5,9 +5,12 @@ from scipy.stats.qmc import Sobol as sbl
 from scipy.stats import qmc
  
 def parseBatchParams(b):
-    with open(b,'r') as fb: lines=fb.readlines()
-    params = [x for x in lines if 
-    return lines
+    ''' read a batch.py file for NetPyNE param search; returning list of (name, valueList, [indexed]) where optional indexed means to use all the values '''
+    with open(b,'r') as fb: lines = fb.readlines()
+    p = re.compile('''\s +params[^a-z]+([^]']+)'\]\s *=\s *(\[[^]]+\])\s *#*\s *(indexed)*''') # indexed is the keyword to NOT sobolize eg amp or cellnum
+    bl = [p.match(l) for l in lines] # find lines that match regexp
+    pl = [(m.group(1), eval(m.group(2)), m.group(3)) for m in bl if m] # name, valueList, [indexed]
+    return pl
         
 def sob (dim=4, num=4096, f=None, seed=1234):
     sm = sbl(d=dim, scramble=True, seed=seed)
