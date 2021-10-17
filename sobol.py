@@ -3,15 +3,25 @@
 import math, numpy as np, re
 from scipy.stats.qmc import Sobol as sbl
 from scipy.stats import qmc
- 
-def parseBatchParams(b):
+from itertools import product
+
+def parseBatchParams (b):
     ''' read a batch.py file for NetPyNE param search; returning list of (name, valueList, [indexed]) where optional indexed means to use all the values '''
     with open(b,'r') as fb: lines = fb.readlines()
     p = re.compile('''\s +params[^a-z]+([^]']+)'\]\s *=\s *(\[[^]]+\])\s *#*\s *(indexed)*''') # indexed is the keyword to NOT sobolize eg amp or cellnum
-    bl = [p.match(l) for l in lines] # find lines that match regexp
-    pl = [(m.group(1), eval(m.group(2)), m.group(3)) for m in bl if m] # name, valueList, [indexed]
+    bl = [p.match(l) for l in lines]     # find lines that match regexp
+    try: 
+        pl = [(m.group(1), eval(m.group(2)), m.group(3)) for m in bl if m]   # strings: name, valueList, [indexed]
+    except Exception as e:
+        print("Unable to evaluate: %s"%(e))
     return pl
         
+def sobcall (pl, num, seed=1234):
+    ''' determine the min, max of sobolized params and do the combos with indexed params '''
+    mins, maxs = [(min(eval(x[1])), max(eval(x[1]))) for x in pl if not x[2]]
+    svals = qmc.scale(sob(len(mins), num, seed=seed), mins, maxs)
+    return svals
+    
 def sob (dim=4, num=4096, f=None, seed=1234):
     sm = sbl(d=dim, scramble=True, seed=seed)
     m = math.floor(math.log(num)/math.log(2) + 0.99) # round up to nearest power of 2
@@ -34,6 +44,6 @@ def getArgs ():
 
 if __name__ == '__main__':
     ag = getArgs()
-    parseBatchParams(ag.b)
-    vals = sob(dim=ag.dim, num=ag.cnt, seed=ag.s, f=ag.o if ag.o else None)
-    if ag.v: print(vals)
+    sobcall(parseBatchParams(ag.b))
+    # vals = sob(dim=ag.dim, num=ag.cnt, seed=ag.s, f=ag.o if ag.o else None)
+
