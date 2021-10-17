@@ -9,11 +9,13 @@ def parseBatchParams (b):
     ''' read a batch.py file for NetPyNE param search; returning list of (name, valueList, [indexed]) where optional indexed means to use all the values '''
     with open(b,'r') as fb: lines = fb.readlines()
     p = re.compile('''\s +params[^a-z]+([^]']+)'\]\s *=\s *(\[[^]]+\])\s *#*\s *(indexed)*''') # indexed is the keyword to NOT sobolize eg amp or cellnum
-    bl = [p.match(l) for l in lines]     # find lines that match regexp
-    try: 
-        pl = [(m.group(1), eval(m.group(2)), m.group(3)) for m in bl if m]   # strings: name, valueList, [indexed]
-    except Exception as e:
-        print("Unable to evaluate: %s"%(e))
+    bl, pl = [(i, p.match(l)) for i,l in enumerate(lines)], [] # bl: lines that match regexp
+    for i,m in bl:
+        if m:
+            try: 
+                pl.append((m.group(1), eval(m.group(2)), m.group(3))) # strings: name, valueList, [indexed]
+            except Exception as e:
+                print("ERROR >>>%s<<<\n\tunable to evaluate '%s':\n\tline %d:'%s'"%(e, m.group(2), i, m.string.strip()))
     return pl
         
 def sobcall (pl, num, seed=1234):
