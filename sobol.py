@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-import math, numpy as np, re
-from scipy.stats.qmc import Sobol as sbl
+import math, re, csv
 from scipy.stats import qmc
 from itertools import product
 
@@ -31,10 +30,11 @@ def sobcall (pl, num, seed=33):
     scaledVals = qmc.scale(sobolVals, Mins, Maxs) # only for those that are not 'indexed'
     allVals = list(zip(*scaledVals)) + ivals
     combos = list(product(*allVals))
+    combos.insert(0, labels+ilabels)
     return combos
 
 def sob (dim=4, num=4096, seed=1234):
-    sm = sbl(d=dim, scramble=True, seed=seed)
+    sm = qmc.Sobol(d=dim, scramble=True, seed=seed)
     m = math.floor(math.log(num)/math.log(2) + 0.99) # round up to nearest power of 2
     if 2**m != num: print(f'{2**m} samples (2^{m} ; {num} requested)')
     vals = sm.random_base2(m=m) # 2^m points
@@ -55,7 +55,11 @@ def getArgs ():
     parser.add_argument("-b", default='batch.py', help='name of batchfile with "params" ranges (default ./batch.py)')
     return parser.parse_args()
 
+    np.savetxt(ag.f, allvals, delimiter=',', fmt='%.10f')
+
 if __name__ == '__main__':
     ag = getArgs()
     allvals = sobcall(parseBatchParams(ag.b), ag.cnt)
-    np.savetxt(ag.f, allvals, delimiter=',', fmt='%.10f')
+    with open(ag.f, 'w') as f:
+        wr = csv.writer(f)
+        wr.writerows(allvals)
