@@ -25,11 +25,10 @@ def sobcall (pl, num, seed=33):
             labels.append(x[0]); Mins.append(min(x[1])); Maxs.append(max(x[1]))
         else:
             ilabels.append(x[0]); ivals.append(x[1])
-    print(f'Mins/Maxs for {labels}: {Mins}, {Maxs}')
+    print(f'Mins/Maxs for {labels}: Mins:{Mins}, Maxs:{Maxs}')
     sobolVals = sob(len(Mins), num, seed=seed)
     scaledVals = qmc.scale(sobolVals, Mins, Maxs) # only for those that are not 'indexed'
-    allVals = list(zip(*scaledVals)) + ivals
-    combos = list(product(*allVals))
+    combos = [[*p[0],*p[1]] for p in product(scaledVals.tolist(),list(product(*ivals)))]
     combos.insert(0, labels+ilabels)
     return combos
 
